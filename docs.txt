@@ -1,0 +1,7 @@
+start webpack -p --watch
+
+https://bower.io/docs/creating-packages/
+
+bower register unobtrusive-typescript git://github.com/96467840/unobtrusive-typescript.git
+
+bower info unobtrusive-typescript
