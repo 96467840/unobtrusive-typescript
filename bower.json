@@ -21,7 +21,8 @@
     "test",
     "demo",
     "lib",
-    "tests"
+    "tests",
+    "*.txt"
   ],
   "dependencies": {
     "jquery": ">= 1.7.2"

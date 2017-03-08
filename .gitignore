@@ -242,6 +242,4 @@ ModelManifest.xml
 .fake/
 
 lib/
-**/*.js
-**/*.map
-
+bin/
