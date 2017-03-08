@@ -20,11 +20,11 @@
     "bower_components",
     "test",
     "demo",
-    "lib"
+    "lib",
+    "tests"
   ],
   "dependencies": {
     "jquery": ">= 1.7.2"
   },
-  "version": "0.0.1",
-  "_source": "git://github.com/96467840/unobtrusive-typescript.git"
+  "main": "dist/unobtrusive-typescript.ts"
 }

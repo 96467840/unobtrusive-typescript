@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    //"outDir": "null",//"./wwwroot/ts/",
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "module": "commonjs",
+    "target": "es5",
+    //"jsx": "react",
+    "jsx": "preserve",
+    "experimentalDecorators": true,
+    "removeComments": true
+  }
+  //,"include": [
+  //  "./wwwroot/ts/**/*.ts"
+  //  //,"./wwwroot/lib/**/*"
+  //]
+}
