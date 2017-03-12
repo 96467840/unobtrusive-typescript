@@ -3,7 +3,7 @@
 var glob = require("glob");
 //console.log( files );
 var entries = {};
-var files = glob.sync("./dist/*.ts");
+var files;// = glob.sync("./dist/*.ts");
 /*files.forEach(function(file) {
     //console.log( file );
     var found;
@@ -13,7 +13,7 @@ var files = glob.sync("./dist/*.ts");
     }
 });/**/
 // test scripts
-files = glob.sync("./test/ts/*.ts");
+files = glob.sync( "./samples/ts/*.ts" );
 files.forEach(function(file) {
     //console.log( file );
     var found;
@@ -26,7 +26,7 @@ module.exports = {
     entry: entries,
     output: {
         filename: "[name].min.js",
-        path: __dirname + "/test/js"
+        path: __dirname + "/samples/js"
     },
 
     // Enable sourcemaps for debugging webpack's output.
