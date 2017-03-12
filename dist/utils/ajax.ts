@@ -36,7 +36,7 @@ export const Ajax = (opts: JQueryAjaxSettings) => {
 		opts.error = function (jqXHR, textStatus, errorThrown) {
 			// никаких call, apply надо сохранить контекст вызова иногда это важно
 			original(jqXHR, textStatus, errorThrown);
-            Log('error:', textStatus, errorThrown);
+            Log('Ajax.error()', textStatus, errorThrown);
         };
 	}
     return $.ajax(opts);

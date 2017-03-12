@@ -1,0 +1,162 @@
+import $ = require('jquery');
+
+export class Button {
+    private title: string;
+    private onclick: any;
+
+    // element с маленькой буквы (с большой у нас обычно называется объект типа Element)
+    public element: JQuery;
+
+    constructor(title: string, onclick: any) {
+        this.title = title;
+        this.onclick = onclick;
+
+        this.Init().Render().BindCallback()
+    }
+
+    // чтение данных с атрибутов
+    Init(): Button {
+        //this.regionid = this.element.data('id');
+        return this;
+    };
+
+    // отрисовка компонента
+    Render(): Button {
+        this.element = $('<button type="button" class="mdl-button">' + this.title + '</button>');
+        return this;
+    };
+
+    // навешиваем стандартные обработчики
+    BindCallback(): Button {
+        if (typeof this.onclick !== 'function') return this;
+        let that = this;
+        this.element.on('click', that.onclick);
+        return this;
+    };
+}
+
+export interface ParamsDialog {
+    Title: string;
+    Body: JQuery;
+    ContainerClass: string;
+    Backdrop: string;
+    Class: string;
+    Buttons: Array<Button>;
+    Show: boolean;
+    Selector: string;
+}
+
+export class Dialog {
+    private Params: ParamsDialog;
+    private element: JQuery;
+    private Element: Element;
+    private Body: JQuery;
+    private Footer: JQuery;
+
+    // #region constructor destroy init render bind
+    constructor(params: ParamsDialog, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel') {
+        let that = this;
+        // установка значений по умолчанию
+        params = $.extend({}, {
+            Buttons: []
+        }, params);
+
+        if (buttonClosePlace != null) {
+            if (buttonClosePlace == -1) {
+                params.Buttons.push(new Button(buttonCloseTitle, this.Close.bind(this)));
+            } else {
+                params.Buttons.splice(buttonClosePlace, 0, new Button(buttonCloseTitle, this.Close.bind(this)));
+            }
+        }
+
+        this.Params = params;
+        this.Init().Render().BindCallback();
+        if (this.Params.Show) {
+            this.Show();
+        }
+    }
+
+    Destroy(): void {
+        // обязательно вернуть все в исходное состояние
+        if (!this.Params.Selector) {
+            // мы создали модал мы его и херим
+            this.element.remove();
+        }
+    }
+
+    // чтение данных с атрибутов
+    Init(): Dialog {
+        if (this.Params.Selector) {
+            this.element = $(this.Params.Selector);
+        }
+        return this;
+    };
+
+    Render(): Dialog {
+        //console.log('-->', this.params.Selector);
+        if (this.Params.Selector) {
+            // создавать ничего не надо. уже все создано.
+        } else {
+            this.Draw();
+        }
+
+        this.Element = this.element[0];
+        return this;
+    }
+
+    BindCallback(): Dialog {
+        this.element.find('.close').on('click', this.Close.bind(this))
+        return this;
+    }
+    // #endregion
+
+    Draw() {
+        let addAttrs = '';
+        if (this.Params.Backdrop) addAttrs += ' data-backdrop="' + this.Params.Backdrop + '"';
+        this.element = $(
+            '<div class="modal ' + this.Params.ContainerClass + '"' + addAttrs + '>'
+            + '<div class="modal-dialog ' + this.Params.Class + '" role="document">'
+            + '<div class="modal-content">'
+
+            + '<div class="modal-header">'
+            + (this.Params.Title ? '<h5 class="js-title">' + this.Params.Title + '</h5>' : '')
+            + '<button type= "button" class="close" data-dismiss="modal" aria-label="Close">'
+            + '<span aria-hidden="true">&times;</span>'
+            + '</button>'
+            + '</div>'
+            
+            + '<div class="modal-body">'
+            + '</div>'
+            + '<div class="modal-footer"></div>'
+            + '</div>'
+            + '</div>'
+            + '</div>'
+        );
+        this.Footer = this.element.find('.modal-footer');
+        if (!this.Params.Buttons) {
+            this.Footer.addClass('hide');
+        }
+        this.Body = this.element.find('.modal-body');
+        this.Body.append(this.Params.Body);
+
+        //$('<a class="close"></a>').prependTo(this.element);
+
+        if (this.Params.Buttons) {
+            for (var i = 0, l = this.Params.Buttons.length; i < l; i++) {
+                this.element.find('.modal-footer').append(this.Params.Buttons[i].element);
+            }
+        }
+        this.element.appendTo('body');
+        /**/
+    }
+
+    Show(): Dialog {
+        (<any>this.element).modal('show');
+        return this;
+    }
+
+    Close(): boolean {
+        (<any>this.element).modal('hide');
+        return false;
+    }
+}
