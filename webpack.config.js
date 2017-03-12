@@ -1,27 +1,36 @@
 /// <binding ProjectOpened='Watch - Production' />
 //var webpack = require( 'webpack' );
-var glob = require( "glob" );
+var glob = require("glob");
 //console.log( files );
 var entries = {};
-var files = glob.sync( "./dist/*.ts" );
-files.forEach( function (file) {
+var files = glob.sync("./dist/*.ts");
+/*files.forEach(function(file) {
     //console.log( file );
     var found;
-    if ( found = file.match( /\/([^\/]+)\.ts$/ ) ) {
+    if (found = file.match(/\/([^\/]+)\.ts$/)) {
         //console.log( '-->', found );
         entries[found[1]] = file;
     }
-} );
-
+});/**/
+// test scripts
+files = glob.sync("./test/ts/*.ts");
+files.forEach(function(file) {
+    //console.log( file );
+    var found;
+    if (found = file.match(/\/([^\/]+)\.ts$/)) {
+        //console.log( '-->', found );
+        entries[found[1]] = file;
+    }
+});
 module.exports = {
     entry: entries,
     output: {
         filename: "[name].min.js",
-        path: __dirname + "/bin"
+        path: __dirname + "/test/js"
     },
 
     // Enable sourcemaps for debugging webpack's output.
-    devtool: "source-map",//"cheap-module-source-map",//"cheap-module-eval-source-map",//"source-map",//
+    devtool: "source-map", //"cheap-module-source-map",//"cheap-module-eval-source-map",//"source-map",//
 
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.

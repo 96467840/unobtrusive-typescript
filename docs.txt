@@ -1,4 +1,5 @@
 start webpack -p --watch
+start webpack -d --watch
 
 https://bower.io/docs/creating-packages/
 
