@@ -3,7 +3,7 @@ import { App } from "./app";
 import { Url } from "./url";
 import { Ajax } from "./ajax";
 import { Log } from './log';
-import { Dialog } from './dialog';
+import { Prompt } from './dialog';
 
 /**
  * Базовый тип входных параметров для всех компонентов
@@ -194,6 +194,7 @@ enum EnumInsertinMode {
  * Основной компонент который навешивается на .jsc-uts селектор (аналог unobtrusive ajax от microsoft)
  */
 export class Item extends ItemBase<ParamsBase> {
+    private data: any;
 
     //#region Свойства
 
@@ -407,8 +408,8 @@ export class Item extends ItemBase<ParamsBase> {
      */
     OnSubmit(): boolean {
         // сериализуем форму
-        let data = $(this.Element).serialize();
-        this.onAction(data);
+        this.data = $(this.Element).serialize();
+        this.onAction();
         return false;
     };
 
@@ -416,21 +417,30 @@ export class Item extends ItemBase<ParamsBase> {
      * Калбек на клик
      */
     OnClick(): boolean {
-
+        this.data = {};
         this.onAction();
         return false;
     };
 
+    private promptDialog: Prompt = null;
     /**
      * Выполнение запроса
      * аргумент строка или объект
      */
-    private onAction(data: any = null): void {
-        let that = this;
-        if (that.Prompt) {
-
+    private onAction(): void {
+        if (this.Prompt) {
+            this.promptDialog = new Prompt(this.PromptTitle, this.Prompt, this.PromptYes, this.PromptNo, this._onAction.bind(this));
             return;
         }
+        this._onAction();
+    };
+
+    private _onAction(): void {
+        var that = this;
+        let data = that.data;
+        if (that.promptDialog != null) that.promptDialog.Close();
+        that.promptDialog = null;
+
         // что нужно сделать перед запросом. спросить юзера? показать колесико?
         if (that.HideBefore) {
             $(that.HideBefore).hide();
@@ -443,29 +453,14 @@ export class Item extends ItemBase<ParamsBase> {
         }
         that.ShowLoading();
         Ajax({
-            url: that.OnClickURL,
+            url: this.OnClickURL,
             method: that.Method,
             dataType: 'json',
             data: data,
             success: function (data: any) {
-                this.HideLoading();
+
                 if (typeof data.error !== 'undefined') {
-                    if (typeof data.errorcode !== 'undefined') {
-                        // стандартные ошибки
-                        switch (data.errorcode) {
-                            case 'NEED_AUTH':
-                                //that.ShowLogin(data.error);
-                                break;
-                            case 'NEED_REFRESH': // пропала сессия нужен релоад страницы
-                                window.location.reload();
-                                break;
-                            default:
-                                alert('Unknown standart error');
-                        }
-                    } else {
-                        // кастомные ошибки
-                        that.ShowError(data.error);
-                    }
+                    that.ShowError(data.error);
                 } else {
                     if (that.Target) {
                         let html = '';
@@ -495,7 +490,11 @@ export class Item extends ItemBase<ParamsBase> {
                         $(that.ShowAfter).show();
                     }
                 }
-            }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                that.ShowError('При выполнении запроса произошла ошибка.  Проверьте соединение с интернетом.');
+            },
+            complete: function () { that.HideLoading(); }
         });
     };
 
