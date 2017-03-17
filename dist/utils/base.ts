@@ -8,14 +8,14 @@ import { Prompt } from './dialog';
 /**
  * Базовый тип входных параметров для всех компонентов
  */
-export interface ParamsBase {
+export interface BaseParams {
     Selector: string;
 }
 
 /**
  * Базовый класс для всех компонентов
  */
-export abstract class ItemBase<T extends ParamsBase>
+export abstract class BaseItem<T extends BaseParams>
 {
     // #region Свойства
 
@@ -33,11 +33,11 @@ export abstract class ItemBase<T extends ParamsBase>
     /**
      * Ссылка на фабрику
      */
-    protected Collection: CollectionItemBase<ItemBase<T>>;
+    protected Collection: BaseItemCollection<BaseItem<T>>;
 
     // #endregion
 
-    constructor(element: Element, params: T, collection: CollectionItemBase<ItemBase<T>>) {
+    constructor(element: Element, params: T, collection: BaseItemCollection<BaseItem<T>>) {
         this.Params = params;
         this.Element = element;
         this.element = $(this.Element);
@@ -62,7 +62,7 @@ export abstract class ItemBase<T extends ParamsBase>
 /**
  * Базовая коллекция для всех компонентов
 */
-export abstract class CollectionItemBase<T extends ItemBase<ParamsBase>>
+export abstract class BaseItemCollection<T extends BaseItem<BaseParams>>
 {
     // #region Свойства
 
@@ -77,7 +77,7 @@ export abstract class CollectionItemBase<T extends ItemBase<ParamsBase>>
     /**
      * Копия входных параметров
      */
-    Params: ParamsBase;
+    Params: BaseParams;
 
     /**
      * Коллекция компонентов
@@ -91,7 +91,7 @@ export abstract class CollectionItemBase<T extends ItemBase<ParamsBase>>
 
     // #endregion
 
-    constructor(params: ParamsBase, app: App, name: string = null) {
+    constructor(params: BaseParams, app: App, name: string = null) {
         if (name == null) {
             // не гарантирует уникальность, но пока так
             name = params.Selector.replace(/[^a-z0-9]+/i, '_').trim();
@@ -178,7 +178,7 @@ export abstract class CollectionItemBase<T extends ItemBase<ParamsBase>>
      * В этом методе необходимо создать экземпляр компонента.
      * В этом методе просто вызывается конструктор экземпляра компонента
      */
-    public abstract Сreate(element: Element, params: ParamsBase, collection: CollectionItemBase<T>): T;
+    public abstract Сreate(element: Element, params: BaseParams, collection: BaseItemCollection<T>): T;
 
     // #endregion
 }
@@ -193,7 +193,7 @@ enum EnumInsertinMode {
 /**
  * Основной компонент который навешивается на .jsc-uts селектор (аналог unobtrusive ajax от microsoft)
  */
-export class Item extends ItemBase<ParamsBase> {
+export class Item extends BaseItem<BaseParams> {
     private data: any;
 
     //#region Свойства
@@ -297,7 +297,7 @@ export class Item extends ItemBase<ParamsBase> {
 
     //#endregion
 
-    constructor(element: Element, params: ParamsBase, collection: CollectionItemBase<Item>) {
+    constructor(element: Element, params: BaseParams, collection: BaseItemCollection<Item>) {
         super(element, params, collection);
 
         this.Init().Render().BindCallback();
@@ -502,12 +502,12 @@ export class Item extends ItemBase<ParamsBase> {
 }
 
 // экземпляр стандартной коллекции стандартного класса
-export class CollectionItem extends CollectionItemBase<Item> {
-    constructor(params: ParamsBase, app: App) {
+export class ItemCollection extends BaseItemCollection<Item> {
+    constructor(params: BaseParams, app: App) {
         super(params, app);
     };
 
-    Сreate(element: Element, params: ParamsBase, collection: CollectionItem): Item {
+    Сreate(element: Element, params: BaseParams, collection: ItemCollection): Item {
         return new Item(element, params, collection);
     }
 }

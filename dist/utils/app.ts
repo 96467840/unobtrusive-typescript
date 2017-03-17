@@ -1,14 +1,14 @@
-import { Item, CollectionItem, CollectionItemBase, ParamsBase, ItemBase } from "./base";
+import { Item, ItemCollection, BaseItemCollection, BaseParams, BaseItem } from "./base";
 import { Log } from './log';
 
 export class App {
-    public Collections: Array<CollectionItemBase<ItemBase<ParamsBase>>>;
+    public Collections: Array<BaseItemCollection<BaseItem<BaseParams>>>;
 
     constructor() {
-        this.Collections = new Array<CollectionItemBase<ItemBase<ParamsBase>>>();
+        this.Collections = new Array<BaseItemCollection<BaseItem<BaseParams>>>();
     }
 
-    public AddCollections(collections: Array<CollectionItemBase<ItemBase<ParamsBase>>> = null): App {
+    public AddCollections(collections: Array<BaseItemCollection<BaseItem<BaseParams>>> = null): App {
 
         if (collections != null) {
             for (var i = 0, l = collections.length; i < l; i++) {
@@ -17,12 +17,12 @@ export class App {
         }
         return this;
     }
-    public AddCollection(collection: CollectionItemBase<ItemBase<ParamsBase>>): App {
+    public AddCollection(collection: BaseItemCollection<BaseItem<BaseParams>>): App {
         this.Collections.push(collection);
         return this;
     }
 
-    public FindCollection(selector: string): CollectionItemBase<ItemBase<ParamsBase>> {
+    public FindCollection(selector: string): BaseItemCollection<BaseItem<BaseParams>> {
         for (var i = 0, l = this.Collections.length; i < l; i++) {
             if (this.Collections[i].Params.Selector == selector) return this.Collections[i];
         }
@@ -32,7 +32,7 @@ export class App {
     public AddDefaultCollections(selector: string = '.jsc-uts'): App {
         // базовая коллекция компонентов с поведением по умолчанию (думаю будет 50% таких компонентов)
         // создавать такие объекты будем самыми последними, так как наши сложные компоненты могут содержать простые компоненты с действием по умолчанию
-        this.Collections.push(new CollectionItem({ Selector: selector } as ParamsBase, this));
+        this.Collections.push(new ItemCollection({ Selector: selector } as BaseParams, this));
         return this;
     }
 

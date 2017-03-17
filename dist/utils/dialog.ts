@@ -42,7 +42,7 @@ export class Button {
 }
 
 
-export interface ParamsDialog {
+export interface DialogParams {
     Title: string;
     Body: JQuery;
     ContainerClass: string;
@@ -55,14 +55,14 @@ export interface ParamsDialog {
 }
 
 export class Dialog {
-    private Params: ParamsDialog;
+    private Params: DialogParams;
     private element: JQuery;
     private Element: Element;
     private Body: JQuery;
     private Footer: JQuery;
 
     // #region constructor destroy init render bind
-    constructor(params: ParamsDialog, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel') {
+    constructor(params: DialogParams, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel') {
         let that = this;
         // установка значений по умолчанию
         params = $.extend({}, {
@@ -199,13 +199,13 @@ export class Dialog {
 
 export class Prompt extends Dialog {
     constructor(title: string, text: string, btnAgreeTitle: string, btnCancelTitle: string, callback: any) {
-        super(<ParamsDialog>{ DestroyOnHiden: true, Show: true, Title: title, Body: $('<p>' + text + '</p>'), Buttons: [new Button(btnAgreeTitle, callback, 'btn-primary')] }, 0, btnCancelTitle);
+        super(<DialogParams>{ DestroyOnHiden: true, Show: true, Title: title, Body: $('<p>' + text + '</p>'), Buttons: [new Button(btnAgreeTitle, callback, 'btn-primary')] }, 0, btnCancelTitle);
     }
 }
 
 export class Alert extends Dialog {
     constructor(title: string, text: string, btnOkTitle: string) {
-        super(<ParamsDialog>{ DestroyOnHiden: true, Show: true, Title: title, Body: $('<p>' + text + '</p>'), Buttons: [] }, 0, btnOkTitle);
+        super(<DialogParams>{ DestroyOnHiden: true, Show: true, Title: title, Body: $('<p>' + text + '</p>'), Buttons: [] }, 0, btnOkTitle);
     }
 
 }

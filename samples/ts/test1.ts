@@ -28,6 +28,6 @@ _app
             UTS.Log('ready');
             app.FindCollection('.jsc-uts').Invoke('hello');
 
-            let d = new UTS.Dialog(<UTS.ParamsDialog>{});
+            let d = new UTS.Dialog(<UTS.DialogParams>{});
         }
     });
