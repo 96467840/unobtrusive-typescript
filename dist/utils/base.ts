@@ -399,7 +399,7 @@ export class Item extends BaseItem<BaseParams> {
 
     Say(message: string, inDialog: boolean): void {
         if (inDialog) {
-            let a = new Alert('Say:', message, 'Close');
+            new Alert('Say:', message, 'Close');
         } else {
             Log('Say:', message);
         }
