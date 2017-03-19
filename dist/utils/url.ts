@@ -1,9 +1,9 @@
 // hash
-interface HashString { [s: string]: string; }
+import { HashString} from './lib';
 
 export class Url {
 
-    static split_url_params(g: string): HashString {
+    static SplitUrlParams(g: string): HashString {
         var l: HashString = {};
         var k = g.split("&");
         for (var h = 0, len = k.length; h < len; h++) {
@@ -16,17 +16,17 @@ export class Url {
         return l;
     }
 
-    static get_from_location(): HashString {
+    static GetFromLocation(): HashString {
         let l: HashString = {};
         let g = window.location.search;
         if (g) {
             g = g.substr(1);
-            l = Url.split_url_params(g);
+            l = Url.SplitUrlParams(g);
         }
         return l;
-    };
+    }
 
-    static join_url_params(g: HashString): string {
+    static JoinUrlParams(g: HashString): string {
         var l = new Array();
         for (let i in g) {
             // в теории! в таком случае не надо проверять hasOwnProperty (see sample in https://www.typescriptlang.org/docs/handbook/modules.html)
@@ -35,6 +35,6 @@ export class Url {
             //}
         }
         return l.join('&');
-    };
+    }
 }/**/
 

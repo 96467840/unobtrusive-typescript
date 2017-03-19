@@ -1,39 +1,58 @@
 import $ = require('jquery');
+import { HashString, Lib } from './lib';
 
 export class Button {
-    private title: string;
-    private onclick: any;
-    private class: string;
+    private Title: string;
+    private OnClick: () => void;
+    private Class: string;
+    private ElementName: string;
+    private Attrs: HashString;
 
     // element с маленькой буквы (с большой у нас обычно называется объект типа Element)
     public element: JQuery;
 
-    constructor(title: string, onclick: any, _class: string = 'btn-default') {
-        this.title = title;
-        this.onclick = onclick;
-        this.class = _class;
+    constructor(title: string, onclick: () => void, _class: string = 'btn btn-default', elementName: string = 'button', attrs: HashString = null) {
+        let that = this;
+        that.Title = title;
+        that.OnClick = onclick;
+        that.Class = _class;
 
-        this.Init().Render().BindCallback()
+        if (elementName == null) elementName = 'button';
+        elementName = elementName.toLowerCase();
+        if (elementName == 'a') {
+            that.Attrs = $.extend({}, { /*href:'#',*/ 'class': that.Class }, attrs);
+        } else {
+            elementName = 'button';
+            that.Attrs = $.extend({}, { type: 'button', 'class': that.Class }, attrs);
+        }
+        that.ElementName = elementName;
+
+        that.Init().Render().BindCallback()
     }
 
     // чтение данных с атрибутов
     Init(): Button {
-        //this.regionid = this.element.data('id');
+        //let that = this;
+
         return this;
     };
 
     // отрисовка компонента
     Render(): Button {
-        this.element = $('<button type="button" class="btn ' + this.class + '">' + this.title + '</button>');
-        return this;
+        let that = this;
+        that.element = $('<' + that.ElementName + ' ' + Lib.RenderAttrs(that.Attrs) + '>' + that.Title + '</' + that.ElementName + '>');
+        return that;
     };
 
     // навешиваем стандартные обработчики
     BindCallback(): Button {
-        if (typeof this.onclick !== 'function') return this;
         let that = this;
-        this.element.on('click', that.onclick);
-        return this;
+
+        if (typeof that.OnClick !== 'function') return that;
+        let handler = that.OnClick;
+        that.element.off('click', handler);
+        that.element.on('click', handler);
+        return that;
     };
 
     ToHtml(): JQuery {
@@ -52,6 +71,7 @@ export interface DialogParams {
     Show: boolean;
     Selector: string;
     DestroyOnHiden: boolean;
+    OnClose: () => void;
 }
 
 export class Dialog {
@@ -62,7 +82,7 @@ export class Dialog {
     private Footer: JQuery;
 
     // #region constructor destroy init render bind
-    constructor(params: DialogParams, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel') {
+    constructor(params: DialogParams, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel', btnCloseClass: string = 'btn btn-default') {
         let that = this;
         // установка значений по умолчанию
         params = $.extend({}, {
@@ -73,11 +93,12 @@ export class Dialog {
             Show: false,
             Class: '',
             DestroyOnHiden: false,
+            OnClose: () => { },
         }, params);
 
         this.Params = params;
 
-        that.AddButtonClose(buttonClosePlace, buttonCloseTitle);
+        that.AddButtonClose(buttonClosePlace, buttonCloseTitle, btnCloseClass);
 
         this.Init().Render().BindCallback();
         if (this.Params.Show) {
@@ -102,7 +123,7 @@ export class Dialog {
     };
 
     Render(): Dialog {
-        //console.log('-->', this.params.Selector);
+        //Log('-->', this.params.Selector);
         if (this.Params.Selector) {
             // создавать ничего не надо. уже все создано.
         } else {
@@ -114,49 +135,58 @@ export class Dialog {
     }
 
     BindCallback(): Dialog {
-        let that = this
-        that.element.find('.close').on('click', that.Close.bind(that))
-        if (that.Params.DestroyOnHiden)
-            that.element.on('hidden.bs.modal', function () {
-                that.Destroy();
-            });
+        let that = this;
+        let handler = that.Close.bind(that);
+        that.element.find('.js-close').off('click', handler); // мы можем вызвать несколько раз BindCallback
+        that.element.find('.js-close').on('click', handler)
+
+        let closeHandler = function () {
+            that.Params.OnClose();
+            if (that.Params.DestroyOnHiden) that.Destroy();
+        };
+        that.element.off('hidden.bs.modal', closeHandler);
+        that.element.on('hidden.bs.modal', closeHandler);
 
         return that;
     }
     // #endregion
 
-    AddButtonClose(buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Отмена') {
+    AddButtonClose(buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel', btnClass: string = 'btn btn-default') {
+        let that = this;
         if (buttonClosePlace != null) {
+            let b = new Button(buttonCloseTitle, that.Close.bind(that), btnClass);
             if (buttonClosePlace == -1) {
-                this.Params.Buttons.push(new Button(buttonCloseTitle, this.Close.bind(this), 'btn-link'));
+                that.Params.Buttons.push(b);
             } else {
-                this.Params.Buttons.splice(buttonClosePlace, 0, new Button(buttonCloseTitle, this.Close.bind(this), 'btn-link'));
+                that.Params.Buttons.splice(buttonClosePlace, 0, b);
             }
         }
     }
 
-    UpdateButtons(buttons: Array<Button>, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Отмена') {
-        this.Footer.html('');
-        this.Params.Buttons = buttons;
+    UpdateButtons(buttons: Array<Button>, buttonClosePlace: number | null = -1, buttonCloseTitle: string = 'Cancel', btnCloseClass: string = 'btn btn-default') {
+        let that = this;
+        that.Footer.html('');
+        that.Params.Buttons = buttons;
 
-        this.AddButtonClose(buttonClosePlace, buttonCloseTitle);
+        that.AddButtonClose(buttonClosePlace, buttonCloseTitle, btnCloseClass);
 
         for (var i = 0, l = buttons.length; i < l; i++) {
-            this.Footer.append(buttons[i].ToHtml());
+            that.Footer.append(buttons[i].ToHtml());
         }
     }
 
     Draw() {
+        let that = this;
         let addAttrs = '';
-        if (this.Params.Backdrop) addAttrs += ' data-backdrop="' + this.Params.Backdrop + '"';
-        this.element = $(
-            '<div class="modal ' + this.Params.ContainerClass + '"' + addAttrs + '>'
-            + '<div class="modal-dialog ' + this.Params.Class + '" role="document">'
+        if (that.Params.Backdrop) addAttrs += ' data-backdrop="' + that.Params.Backdrop + '"';
+        that.element = $(
+            '<div class="modal ' + that.Params.ContainerClass + '"' + addAttrs + '>'
+            + '<div class="modal-dialog ' + that.Params.Class + '" role="document">'
             + '<div class="modal-content">'
 
             + '<div class="modal-header">'
-            + (this.Params.Title ? '<h5 class="js-title">' + this.Params.Title + '</h5>' : '')
-            + '<button type= "button" class="close" data-dismiss="modal" aria-label="Close">'
+            + (that.Params.Title ? '<h5 class="js-title">' + that.Params.Title + '</h5>' : '')
+            + '<button type="button" class="close js-close" data-dismiss="modal" aria-label="Close">'
             + '<span aria-hidden="true">&times;</span>'
             + '</button>'
             + '</div>'
@@ -168,21 +198,21 @@ export class Dialog {
             + '</div>'
             + '</div>'
         );
-        this.Footer = this.element.find('.modal-footer');
-        if (!this.Params.Buttons) {
-            this.Footer.addClass('hide');
+        that.Footer = that.element.find('.modal-footer');
+        if (!that.Params.Buttons) {
+            that.Footer.addClass('hide');
         }
-        this.Body = this.element.find('.modal-body');
-        this.Body.append(this.Params.Body);
+        that.Body = that.element.find('.modal-body');
+        that.Body.append(that.Params.Body);
 
         //$('<a class="close"></a>').prependTo(this.element);
 
         if (this.Params.Buttons) {
-            for (var i = 0, l = this.Params.Buttons.length; i < l; i++) {
-                this.Footer.append(this.Params.Buttons[i].element);
+            for (var i = 0, l = that.Params.Buttons.length; i < l; i++) {
+                that.Footer.append(that.Params.Buttons[i].element);
             }
         }
-        this.element.appendTo('body');
+        that.element.appendTo('body');
         /**/
     }
 
@@ -199,7 +229,7 @@ export class Dialog {
 
 export class Prompt extends Dialog {
     constructor(title: string, text: string, btnAgreeTitle: string, btnCancelTitle: string, callback: any) {
-        super(<DialogParams>{ DestroyOnHiden: true, Show: true, Title: title, Body: $('<p>' + text + '</p>'), Buttons: [new Button(btnAgreeTitle, callback, 'btn-primary')] }, 0, btnCancelTitle);
+        super(<DialogParams>{ DestroyOnHiden: true, Show: true, Title: title, Body: $('<p>' + text + '</p>'), Buttons: [new Button(btnAgreeTitle, callback, 'btn btn-primary')] }, 0, btnCancelTitle);
     }
 }
 

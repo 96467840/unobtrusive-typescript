@@ -22,7 +22,7 @@ export class App {
         return this;
     }
 
-    public FindCollection(selector: string): BaseItemCollection<BaseItem<BaseParams>> {
+    public FindCollectionBySelector(selector: string): BaseItemCollection<BaseItem<BaseParams>> {
         for (var i = 0, l = this.Collections.length; i < l; i++) {
             if (this.Collections[i].Params.Selector == selector) return this.Collections[i];
         }

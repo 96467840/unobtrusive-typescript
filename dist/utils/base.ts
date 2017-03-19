@@ -3,13 +3,16 @@ import { App } from "./app";
 import { Url } from "./url";
 import { Ajax } from "./ajax";
 import { Log } from './log';
-import { Prompt } from './dialog';
+import { Prompt, Dialog, DialogParams, Alert } from './dialog';
 
 /**
  * Базовый тип входных параметров для всех компонентов
  */
 export interface BaseParams {
+    // привязка компонента на элементы $(Selector)
     Selector: string;
+    // привязка на конкретные элементы
+    Element: Element[];
 }
 
 /**
@@ -38,10 +41,11 @@ export abstract class BaseItem<T extends BaseParams>
     // #endregion
 
     constructor(element: Element, params: T, collection: BaseItemCollection<BaseItem<T>>) {
-        this.Params = params;
-        this.Element = element;
-        this.element = $(this.Element);
-        this.Collection = collection;
+        let that = this;
+        that.Params = params;
+        that.Element = element;
+        that.element = $(element);
+        that.Collection = collection;
     }
 
     /**
@@ -72,7 +76,7 @@ export abstract class BaseItemCollection<T extends BaseItem<BaseParams>>
      * Возможно пригодится для поиска нужной коллекции на уровне приложения. Пока нигде не используется.
      * Пока для поиска используем Params.Selector
      */
-    Name: string;
+    //Name: string;
 
     /**
      * Копия входных параметров
@@ -91,13 +95,8 @@ export abstract class BaseItemCollection<T extends BaseItem<BaseParams>>
 
     // #endregion
 
-    constructor(params: BaseParams, app: App, name: string = null) {
-        if (name == null) {
-            // не гарантирует уникальность, но пока так
-            name = params.Selector.replace(/[^a-z0-9]+/i, '_').trim();
-        }
+    constructor(params: BaseParams, app: App) {
         this.App = app;
-        this.Name = name;
         this.Params = params;
         this.Collection = new Array<T>();
     };
@@ -105,34 +104,52 @@ export abstract class BaseItemCollection<T extends BaseItem<BaseParams>>
     // #region Методы
 
     /**
+     * Выполняем привязку объекта к конкретному элементу ДОМ
+     */
+    private _bindCollection(elem: Element) {
+        let that = this;
+        // чтобы избежать повторного создания компонента 
+        //Log('_bindCollection:', $(elem).data('__instance'));
+        if ($(elem).data('__instance') == undefined) {
+            let item = that.Сreate(elem, that.Params, that);
+            $(elem).data('__instance', item);
+            that.Collection.push(item);
+        }
+    }
+
+    /**
      * Выполняем привязку компонентов в ДОМ
      */
     public BindCollection(): void {
-        //Log('UpdateCollection:', this);
+        //Log('BindCollection:', this);
         let that = this;
-        $(that.Params.Selector).each(function (index: Number, elem: Element) {
-            // чтобы избежать повторного создания компонента 
-            if ($(elem).data('__instance') == undefined) {
-                let item = that.Сreate(elem, that.Params, that);
-                $(elem).data('__instance', item);
-                that.Collection.push(item);
-            }
-        });
+        if (that.Params.Element) {
+            that.Params.Element.forEach(function (elem: Element) {
+                that._bindCollection(elem);    
+            });
+        }
+        if (that.Params.Selector) {
+            $(that.Params.Selector).each(function (index: Number, elem: Element) {
+                that._bindCollection(elem);
+            });
+        }
     }
 
     /**
      * Выполняем вызов метода action на элементах elements (или на всех если elements=null) с параметрами params
      */
-    public Invoke(action: string, elements: Array<T> = null, params: Array<any> | any = null): Array<any>
+    public Invoke(action: string, elements: Array<Element> = null, params: Array<any> | any = null): Array<any>
     {
+        let that = this;
         // так как мы юзаем apply при вызове функции то параметры надо загнать в массив
         if (!(params instanceof Array)) {
             params = [params];
         }
         let res: Array<any> = [];
-        for (let i: number = 0, l: number = this.Collection.length; i < l; i++) {
-            let e: any = this.Collection[i];
-            if (elements != null && elements.indexOf(e) < 0) continue;
+        for (let i: number = 0, l: number = that.Collection.length; i < l; i++) {
+            let _e = that.Collection[i];
+            let e: any = _e;
+            if (elements != null && elements.indexOf(_e.Element) < 0) continue;
             if (typeof e[action] === 'function') {
                 // чтобы вызвать, например, метод с 2 аргументами 
                 // collection.Invoke("method", [param1, param2]);
@@ -142,7 +159,7 @@ export abstract class BaseItemCollection<T extends BaseItem<BaseParams>>
             } else {
                 // если объект в коллекции несодержит функцию значит и все остальные по идее тоже ее не содержат (коллекция состоит из одинаковых объектов)
                 // сделаем вывод сообщения об ошибке (мало ли опечатались)
-                Log('Error: Action "' + action + '" in collection "' + (this.Params.Selector) + '" not founded.');
+                Log('Error: Action "' + action + '" in collection "' + (that.Params.Selector) + '" not founded.');
                 break;
             }
         }
@@ -241,12 +258,12 @@ export class Item extends BaseItem<BaseParams> {
      * Сделать запрос у юзера перед отправкой запроса. Текст на кнопке согласия. (по умолчанию "Да")
      * Читается с атрибута "data-PromptYes"
      */
-    PromptYes: string;
+    PromptOk: string;
     /**
      * Сделать запрос у юзера перед отправкой запроса. Текст на кнопке отмены. (по умолчанию "Нет")
      * Читается с атрибута "data-PromptNo"
      */
-    PromptNo: string;
+    PromptCancel: string;
 
     /**
      * Селектор контейнера для сообщений об ошибке. По умолчанию ошибка показывается в модальном окне.
@@ -339,10 +356,10 @@ export class Item extends BaseItem<BaseParams> {
 
         this.Prompt = $(element).data('prompt');
         this.PromptTitle = $(element).data('prompttitle');
-        this.PromptYes = $(element).data('promptyes');
-        this.PromptNo = $(element).data('promptno');
+        this.PromptOk = $(element).data('promptok');
+        this.PromptCancel = $(element).data('promptcancel');
 
-        this.DisableLoading = $(element).data('disableloading')==1;
+        this.DisableLoading = $(element).data('disableloading') == 1;
         //this.Loading = $(element).data('loading');
         //if (!this.Loading) this.Loading = '<div class="mdl-spinner mdl-js-spinner is-active loading"></div>';
 
@@ -354,8 +371,8 @@ export class Item extends BaseItem<BaseParams> {
             default: this.InsertionMode = EnumInsertinMode.Replace;
         }
         
-        if (!this.PromptNo) this.PromptNo = 'Нет';
-        if (!this.PromptYes) this.PromptYes = 'Да';
+        if (!this.PromptCancel) this.PromptCancel = 'Cancel';
+        if (!this.PromptOk) this.PromptOk = 'Ok';
         return this;
     };
 
@@ -379,6 +396,14 @@ export class Item extends BaseItem<BaseParams> {
      * отрисовка компонента
      */
     Render(): Item { return this; };
+
+    Say(message: string, inDialog: boolean): void {
+        if (inDialog) {
+            let a = new Alert('Say:', message, 'Close');
+        } else {
+            Log('Say:', message);
+        }
+    }
 
     /**
      * Показываем элемент "загрузка...""
@@ -429,7 +454,7 @@ export class Item extends BaseItem<BaseParams> {
      */
     private onAction(): void {
         if (this.Prompt) {
-            this.promptDialog = new Prompt(this.PromptTitle, this.Prompt, this.PromptYes, this.PromptNo, this._onAction.bind(this));
+            this.promptDialog = new Prompt(this.PromptTitle, this.Prompt, this.PromptOk, this.PromptCancel, this._onAction.bind(this));
             return;
         }
         this._onAction();

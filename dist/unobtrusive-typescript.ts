@@ -11,6 +11,7 @@ export * from "./utils/ajax";
 export * from "./utils/dialog";
 export * from "./utils/app";
 export * from "./utils/base";
+export * from "./utils/lib";
 
 /*declare module "uts" {
     //export = $;

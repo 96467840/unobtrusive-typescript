@@ -1,6 +1,7 @@
 import { Log } from './log';
 //import Url = require('./url');
 import { Url } from './url';
+import { HashString } from './lib';
 
 
 /**
@@ -15,9 +16,9 @@ export const Ajax = (opts: JQueryAjaxSettings) => {
         if (opts.data == null) {
             opts.data = { datatype: 'json' }
         } else if (typeof opts.data === "string") {  // opts.data - строка
-            let params/*: HashString*/ = Url.split_url_params(opts.data);
+            let params: HashString = Url.SplitUrlParams(opts.data);
             params.datatype = 'json';
-            opts.data = Url.join_url_params(params);
+            opts.data = Url.JoinUrlParams(params);
         } else {                                     // opts.data - объект
             opts.data.datatype = 'json';
         }
