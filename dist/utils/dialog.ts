@@ -185,8 +185,8 @@ export class Dialog {
             + '<div class="modal-content">'
 
             + '<div class="modal-header">'
-            + (that.Params.Title ? '<h5 class="js-title">' + that.Params.Title + '</h5>' : '')
             + '<button type="button" class="close js-close" data-dismiss="modal" aria-label="Close">'
+            + (that.Params.Title ? '<h5 class="js-title">' + that.Params.Title + '</h5>' : '')
             + '<span aria-hidden="true">&times;</span>'
             + '</button>'
             + '</div>'
