@@ -17,7 +17,7 @@ export const Ajax = (opts: JQueryAjaxSettings) => {
             opts.data = { datatype: 'json' }
         } else if (typeof opts.data === "string") {  // opts.data - строка
             let params: HashString = Url.SplitUrlParams(opts.data);
-            params.datatype = 'json';
+            params['datatype'] = 'json';
             opts.data = Url.JoinUrlParams(params);
         } else {                                     // opts.data - объект
             opts.data.datatype = 'json';
