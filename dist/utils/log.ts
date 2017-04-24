@@ -5,7 +5,7 @@ export let Log = function (...args: any[]) { };
 //export let Log = function () { };
 let host = window.location.hostname;
 let get = Url.GetFromLocation();
-let isDebug = (get['__debug'] || /\.test$/.test(host)); // тестовые серверы
+let isDebug = (get['__debug'] || /\.test$/.test(host) || /^localhost$/.test(host)); // тестовые серверы
 //isDebug = true;
 //console.log('============>', isDebug)
 try {
